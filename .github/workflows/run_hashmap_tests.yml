@@ -1,0 +1,25 @@
+name: hashmap regression test
+
+on: [push]
+
+jobs:
+  run_hashmap_tests:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get remove --purge man-db
+          sudo apt-get install valgrind
+      - name: Build libmap
+        run: |
+          make
+      - name: Run all tests
+        run: |
+          find bin -type f -executable | xargs -I {} bash -c '{}; exit $?'
+
+      - name: Valgrind all tests
+        run: |
+          find bin -type f -executable | xargs -I {} bash -c 'valgrind --error-exitcode=1 --leak-check=full --track-origins=yes "{}"; exit $?'
