@@ -1,0 +1,96 @@
+* libmap testplan
+
+This document describes the testing plan for libmap.
+
+** High level requirements:
+- All tests must be run under =valgrind= and report no errors.
+- Must write a GitHub Actions runner to automatically run these tests
+  on each commit (mini Python/CI project).
+- Must generate a flamegraph for =test_map_torture.c= to profile
+  performance and identify hotspots.
+
+** Test Descriptions
+
+- Unit tests (at least 2 of these *must* have key type and
+  value type as user-defined structs (struct->struct map)):
+  - =test_map_create.c=: Create an empty hashmap. Try passing
+    bad arguments (NULL pointers, etc).
+  - =test_map_destroy.c=: Create an empty hashmap, then destroy it.
+  - =test_map_insert.c=: Create a hashmap, then insert elements. Try
+    providing a broken =usr_clone_*= function to test error catching.
+    Ensure that resizing occurs by putting in a lot of elements. Use
+    =map_get_size()= to ensure that the right number of elements
+    exist in the map before/after resizing.
+  - =test_map_get.c=: Retrieve elements from the hashmap. Try to get
+    keys that don't exist, and ensure the right error is thrown. Try
+    providing a broken =usr_compare= function that doesn't return
+    values that are within the set $[-1, 0, 1]$.
+  - =test_map_remove.c=: Remove elements from the hashmap. Verify the
+    element is removed by trying to =map_get()= it. Try removing an
+    element that doesn't exist. Ensure that resizing occurs. Use
+    =map_get_size()= to ensure that =map_remove= causes the size to
+    reduce.
+  - =test_map_chaining.c=: Set max_load_factor very high (1000) to force
+    chaining, and ensure that it's handled correctly by getting/removing
+    elements and making sure the size is correct.
+
+- Integration tests:
+  - =test_map_consistency.c=: Make an int->int hashmap that maps each
+    number in the range [1, 1000] to its square. Insert these
+    elements, then use =map_get()= to get all of them. Iterate over
+    the hashmap using the iterators, and ensure that the count of
+    iterations is equal to 1000. Remove elements in the range [250,
+    750), then iterate again, ensuring that the count of remaining
+    elements is 500 and that they are correct (squares).
+  - =test_mega_map.c=: Integration test, your choice how you
+    write it.
+  - =test_map_torture.c=: Large random test. Insert 1 million random
+    key/value pairs into the hashmap (int->int is fine), then iterate
+    over the map and modify the values. Then, access the map a few
+    times (=map_get()=). Finally, use =map_remove()= to remove all the
+    elements of the map. Hint: use =srand(0)= to reseed C's RNG to
+    regenerate the same sequence of random numbers, like this:
+    #+begin_src C :results raw
+      #include <stdio.h>
+      #include <stdlib.h>
+
+      int main(void) {
+          printf("Random sequence:\n");
+          srand(0);  // Seed the random number generator with 0
+          // Now rand() will produce a predictable sequence of numbers.
+          for (int i = 0; i < 5; i++) {
+              printf("%d\n", rand() % 100);
+          }
+
+          // To reproduce the random numbers, reseed the RNG.
+          printf("\nAfter reseed:\n");
+          srand(0);
+          for (int i = 0; i < 5; i++) {
+              printf("%d\n", rand() % 100);
+          }
+
+          return 0;
+      }
+    #+end_src
+
+    #+RESULTS:
+    Random sequence:
+    30
+    91
+    15
+    72
+    61
+
+    After reseed:
+    30
+    91
+    15
+    72
+    61
+
+- Usage tests:
+  - =test_count_unique.c=: Use libmap to count the number of
+    unique integers in an array.
+  - =test_two_sum.c=: Use libmap to solve the two-sum problem.
+  - =test_anagram_checker.c=: Use libmap to check if two strings
+    are anagrams of each other.
