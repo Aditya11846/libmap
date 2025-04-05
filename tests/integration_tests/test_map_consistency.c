@@ -53,7 +53,7 @@ int main(void) {
     printf("Map created successfully!\n");
 
     // Insert 1000 elements
-    for (int i = 0; i < 10000000; i++) {
+    for (int i = 0; i < 1000; i++) {
         int *key = malloc(sizeof(int));
         int *value = malloc(sizeof(int));
 
@@ -78,7 +78,7 @@ int main(void) {
     printf("Entries: %d, Buckets: %d\n", map->num_entries, map->num_buckets);
 
     // Retrieve all inserted elements
-    for (int i = 0; i < 10000000; i++) {
+    for (int i = 0; i < 1000; i++) {
         int key = i;
         void *retrieved_value;
         result = map_get(map, &key, &retrieved_value);
@@ -102,11 +102,11 @@ int main(void) {
 		/* printf("Iterating: Key = %d, Value = %d\n", *(int*)key, *(int*)value); */
 	}
 	printf("Final iteration count: %d\n", count);
-	assert(count == 10000000 && "Iteration count failed");
+	assert(count == 1000 && "Iteration count failed");
 	printf("Iteration successful, count: %d\n",count);
 
 	// Removal
-	for (int i = 25000; i < 172500; i++) {
+	for (int i = 250; i < 750; i++) {
 		int key = i;
 		result = map_remove(map, &key);
 		assert(result == MAP_OK && "Failed to remove key");
@@ -127,7 +127,7 @@ int main(void) {
 	}
 
 	printf("Final iteration count after removal: %d\n", count);
-	//assert(count == 500 && "Iteration count after removal failed!");
+	assert(count == 500 && "Iteration count after removal failed!");
 	printf("Final iteration successful, remaining elements: %d\n", count);
 
 	map_destroy(&map);
